@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maaş Kasa</title>
+<style>
+:root{--bg:#eef2f7;--dark:#0f172a;--card:#fff;--line:#e2e8f0;--muted:#64748b;--green:#16a34a;--red:#dc2626;--blue:#2563eb;--yellow:#f59e0b;--soft:#f8fafc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;padding-bottom:82px}
+header{position:sticky;top:0;z-index:10;background:rgba(238,242,247,.95);backdrop-filter:blur(10px);padding:16px 14px 10px;border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:22px;letter-spacing:-.03em}
+.date{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.month-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+input,select,button{font:inherit}
+input,select{width:100%;border:1px solid var(--line);border-radius:13px;padding:12px;background:#fff;min-height:44px}
+button,.btn{border:0;border-radius:13px;padding:12px 14px;font-weight:800;min-height:44px;text-align:center;text-decoration:none;display:inline-block}
+.primary{background:var(--green);color:white}
+.ghost{background:#e2e8f0;color:#0f172a}
+.danger{background:#fee2e2;color:#991b1b}
+.warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+main{padding:14px;max-width:980px;margin:0 auto}
+.view{display:block;scroll-margin-top:92px;margin-bottom:18px}
+body.js-ready .view{display:none}
+body.js-ready .view.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:0 12px 28px rgba(15,23,42,.08);margin-bottom:12px}
+.card h2{margin:0 0 4px;font-size:20px}
+.card p{margin:0 0 12px;color:var(--muted);line-height:1.45}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px}
+.metric.dark{background:linear-gradient(135deg,#0f172a,#1e293b);color:white}
+.metric span{display:block;color:var(--muted);font-size:12px;font-weight:800}
+.metric.dark span,.metric.dark small{color:#cbd5e1}
+.metric strong{display:block;font-size:23px;margin-top:6px;letter-spacing:-.04em}
+.metric small{font-size:11px;color:#94a3b8;font-weight:700}
+.total-balance-box{margin-top:12px;padding-top:11px;border-top:1px solid rgba(255,255,255,.18)}
+.total-balance-box em{display:block;font-style:normal;font-size:11px;color:#cbd5e1;font-weight:800}
+.total-balance-box b{display:block;margin-top:3px;font-size:18px;letter-spacing:-.03em;color:#fff}
+.form{display:grid;gap:10px}
+.form.two{grid-template-columns:1fr 1fr}
+.form label{font-size:13px;color:#334155;font-weight:800;display:grid;gap:6px}
+.full{grid-column:1/-1;width:100%}
+.list{display:grid;gap:9px}
+.item{background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.item b{display:block}
+.item span{font-size:12px;color:var(--muted);line-height:1.4}
+.amount{font-weight:900;white-space:nowrap;text-align:right}
+.income{color:var(--green)}
+.expense{color:var(--red)}
+.transfer{color:var(--blue)}
+.badge{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:900;background:#e2e8f0;color:#334155}
+.badge.income{background:#dcfce7;color:#166534}
+.badge.expense{background:#fee2e2;color:#991b1b}
+.badge.transfer{background:#dbeafe;color:#1d4ed8}
+.badge.warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.badge.bad{background:#fee2e2;color:#991b1b}
+.bar-row{display:grid;gap:6px;margin-bottom:10px}
+.bar-top{display:flex;justify-content:space-between;font-weight:800;font-size:13px}
+.track{height:13px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+.fill{height:100%;background:linear-gradient(90deg,#16a34a,#86efac);border-radius:999px}
+.fill.warnfill{background:linear-gradient(90deg,#f59e0b,#fde68a)}
+.fill.badfill{background:linear-gradient(90deg,#dc2626,#fecaca)}
+.note{padding:12px;border-radius:16px;border:1px solid #fde68a;background:#fffbeb;color:#92400e;font-weight:700;line-height:1.45}
+.note.good{border-color:#bbf7d0;background:#ecfdf5;color:#166534}
+.note.bad{border-color:#fecaca;background:#fef2f2;color:#991b1b}
+.note.info{border-color:#bfdbfe;background:#eff6ff;color:#1d4ed8}
+.actions{display:flex;gap:7px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
+.mini{border:0;border-radius:10px;padding:7px 9px;min-height:auto;font-size:12px;font-weight:800;background:#e2e8f0}
+.mini.del{background:#fee2e2;color:#991b1b}
+.empty{padding:16px;text-align:center;border:1px dashed #cbd5e1;border-radius:16px;color:#64748b;background:#f8fafc;font-weight:800}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#0f172a;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -12px 30px rgba(15,23,42,.25)}
+.nav-link{color:#cbd5e1;text-decoration:none;text-align:center;font-size:11px;font-weight:900;padding:10px 2px;border-radius:12px}
+.nav-link.active,.nav-link:active{background:rgba(255,255,255,.12);color:#fff}
+.hidden{display:none!important}
+.pay-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}
+.installment-chip{display:inline-block;margin-top:4px;padding:4px 8px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:900}
+@media(min-width:760px){body{padding-bottom:0}.bottom-nav{top:0;bottom:auto;left:0;width:210px;height:100vh;grid-template-columns:1fr;align-content:start;padding:18px}.nav-link{text-align:left;font-size:14px;padding:13px 14px}header,main{margin-left:210px}.grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:430px){.grid{grid-template-columns:1fr}.form.two{grid-template-columns:1fr}.item{grid-template-columns:1fr}.amount{text-align:left}.month-row{grid-template-columns:1fr}.pay-row{grid-template-columns:1fr}}
+</style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Maaş Kasa">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+</head>
+<body>
+<header>
+  <div class="date" id="todayText">Bugün</div>
+  <h1>Maaş Kasa Takip</h1>
+  <div class="month-row">
+    <input type="month" id="monthPicker">
+    <a href="#ekle" class="btn primary" id="quickAdd">+ Kayıt Ekle</a>
+  </div>
+</header>
+
+<nav class="bottom-nav">
+  <a class="nav-link active" href="#takip" data-view="takip">Takip</a>
+  <a class="nav-link" href="#hareketler" data-view="hareketler">Hareketler</a>
+  <a class="nav-link" href="#ekle" data-view="ekle">Ekle</a>
+  <a class="nav-link" href="#duzenli" data-view="duzenli">Düzenli</a>
+  <a class="nav-link" href="#ayarlar" data-view="ayarlar">Ayarlar</a>
+</nav>
+
+<main>
+<section id="takip" class="view active">
+  <div class="grid">
+    <div class="metric dark">
+      <span>Bu Ay Kalan</span>
+      <strong id="mNet">₺0</strong>
+      <small>Gelir - gider</small>
+      <div class="total-balance-box">
+        <em>Genel Toplam Bakiye</em>
+        <b id="mTotalBalance">₺0</b>
+      </div>
+    </div>
+    <div class="metric"><span>Gelir</span><strong id="mIncome">₺0</strong><small id="incomeCount">0 kayıt</small></div>
+    <div class="metric"><span>Gider</span><strong id="mExpense">₺0</strong><small id="expenseCount">0 kayıt</small></div>
+    <div class="metric"><span>Günlük Hak</span><strong id="mDaily">₺0</strong><small id="dailyText">Ay sonuna kadar</small></div>
+  </div>
+
+  <div class="card">
+    <h2>Kredi Kartı Ekstreleri</h2>
+    <p>Ekstre geldiğinde bankadan otomatik para düşmez. Ödeme aralığında “Öde” butonu çıkar.</p>
+    <div id="creditStatementList" class="list"></div>
+  </div>
+
+  <div class="card">
+    <h2>Aktif Taksit Planları</h2>
+    <p>Taksitli alışverişlerin kaç taksit kaldığını buradan takip edersin.</p>
+    <div id="installmentPlans" class="list"></div>
+  </div>
+
+  <div class="card">
+    <h2>Para Nereye Gidiyor?</h2>
+    <p>Bu ay yaptığın giderlerin kategori dağılımı.</p>
+    <div id="categoryBars"></div>
+  </div>
+
+  <div class="card">
+    <h2>Kasa / Kart Durumu</h2>
+    <p>Nakit, banka ve kredi kartı bakiyelerini buradan takip et.</p>
+    <div id="accountCards" class="list"></div>
+  </div>
+
+  <div class="card">
+    <h2>Ay Sonu Tahmini</h2>
+    <p>Bu tempoyla ay sonunda yaklaşık ne kalacağını gösterir.</p>
+    <div id="forecast"></div>
+  </div>
+
+  <div class="card">
+    <h2>Son İşlemler</h2>
+    <div id="recentList" class="list"></div>
+  </div>
+</section>
+
+<section id="hareketler" class="view">
+  <div class="card">
+    <h2>Hareketler</h2>
+    <p>Gün gün tüm gelir/gider hareketleri.</p>
+    <div class="form two">
+      <label>Tür
+        <select id="filterType">
+          <option value="all">Tümü</option>
+          <option value="income">Gelir</option>
+          <option value="expense">Gider</option>
+          <option value="transfer">Transfer</option>
+        </select>
+      </label>
+      <label>Kasa
+        <select id="filterAccount"><option value="all">Tüm kasalar</option></select>
+      </label>
+      <label class="full">Arama
+        <input id="filterSearch" placeholder="Market, yakıt, maaş...">
+      </label>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="metric"><span>Filtre Gelir</span><strong id="fIncome">₺0</strong></div>
+    <div class="metric"><span>Filtre Gider</span><strong id="fExpense">₺0</strong></div>
+    <div class="metric"><span>Filtre Net</span><strong id="fNet">₺0</strong></div>
+  </div>
+  <div class="card"><div id="movementList" class="list"></div></div>
+</section>
+
+<section id="ekle" class="view">
+  <div class="card">
+    <h2>Yeni Kayıt</h2>
+    <p>Gelir, gider, taksitli kredi kartı alışverişi veya kart/banka transferi ekle.</p>
+    <form id="txForm" class="form two">
+      <input type="hidden" id="txId">
+      <label>Tür
+        <select id="txType">
+          <option value="expense">Gider</option>
+          <option value="income">Gelir</option>
+          <option value="transfer">Transfer</option>
+        </select>
+      </label>
+      <label>Tarih <input type="date" id="txDate" required></label>
+      <label>Tutar <input type="number" id="txAmount" min="0" step="0.01" required placeholder="0.00"></label>
+      <label id="catWrap">Kategori <select id="txCategory"></select></label>
+      <label id="accWrap">Kasa/Kart <select id="txAccount"></select></label>
+      <label id="installmentWrap" class="hidden">Taksit Sayısı
+        <input type="number" id="txInstallments" min="1" max="36" value="1">
+      </label>
+      <label id="fromWrap" class="hidden">Çıkış Kasası <select id="txFrom"></select></label>
+      <label id="toWrap" class="hidden">Giriş Kasası <select id="txTo"></select></label>
+      <label class="full">Açıklama <input id="txNote" placeholder="Market, benzin, telefon, mobilya, kart ödemesi..."></label>
+      <button class="primary full" type="submit">Kaydet</button>
+      <button class="ghost full" type="button" id="clearTx">Formu Temizle</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Kredi Kartı Mantığı</h2>
+    <div class="list">
+      <div class="item"><div><b>Tek Çekim</b><span>Gider → Kredi Kartı → 1 taksit</span></div></div>
+      <div class="item"><div><b>Taksitli Alışveriş</b><span>Gider → Kredi Kartı → taksit sayısı. Sistem taksitleri aylara böler.</span></div></div>
+      <div class="item"><div><b>Ekstre Ödeme</b><span>Takip ekranında kredi kartı ekstresinde “Öde” butonu çıkar. Ödeyince bankadan/kasadan karta transfer kaydı oluşur.</span></div></div>
+      <div class="item"><div><b>Başlangıç Kart Borcu</b><span>Ayarlar → Kasa/Kart düzenle. Kart borcun varsa başlangıç bakiyesine eksi gir: örn. -5000.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="duzenli" class="view">
+  <div class="card">
+    <h2>Düzenli Kayıt Ekle</h2>
+    <p>Maaş, kira, fatura, kredi ve abonelik gibi tekrar eden kayıtlar. Yalnızca kayıt günü geldiğinde ve dosyayı o gün açtığında otomatik işlenir.</p>
+    <form id="recForm" class="form two">
+      <input type="hidden" id="recId">
+      <label>Ad <input id="recName" required placeholder="Maaş, kira, internet..."></label>
+      <label>Tür
+        <select id="recType">
+          <option value="expense">Gider</option>
+          <option value="income">Gelir</option>
+        </select>
+      </label>
+      <label>Tutar <input type="number" id="recAmount" min="0" step="0.01" required></label>
+      <label>Ayın Günü <input type="number" id="recDay" min="1" max="31" value="1" required></label>
+      <label>Kategori <select id="recCategory"></select></label>
+      <label>Kasa/Kart <select id="recAccount"></select></label>
+      <button class="primary full" type="submit">Düzenli Kaydı Sakla</button>
+      <button class="ghost full" type="button" id="generateRecurring">Bu Ayın Düzenli Kayıtlarını İşle</button>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Düzenli Kayıtlar</h2>
+    <div id="recList" class="list"></div>
+  </div>
+</section>
+
+<section id="ayarlar" class="view">
+  <div class="card">
+    <h2>Kasa / Kart Ekle - Düzenle</h2>
+    <p>Kredi kartında ekstre günü ve son ödeme günü kullanılır. Mevcut kart borcunu başlangıç bakiyesine eksi olarak girebilirsin.</p>
+    <form id="accountForm" class="form two">
+      <input type="hidden" id="accountId">
+      <label>Ad <input id="accountName" required placeholder="Nakit, Ziraat, Kredi Kartı..."></label>
+      <label>Tür
+        <select id="accountType">
+          <option value="cash">Nakit</option>
+          <option value="bank">Banka</option>
+          <option value="credit">Kredi Kartı</option>
+        </select>
+      </label>
+      <label>Başlangıç Bakiyesi / Borcu
+        <input type="number" id="accountOpening" step="0.01" value="0">
+      </label>
+      <label id="statementWrap">Ekstre Günü
+        <input type="number" id="statementDay" min="1" max="31" value="1">
+      </label>
+      <label id="dueWrap">Son Ödeme Günü
+        <input type="number" id="dueDay" min="1" max="31" value="10">
+      </label>
+      <button class="primary full" type="submit">Kasa/Kart Kaydet</button>
+      <button class="ghost full" type="button" id="clearAccountForm">Formu Temizle</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Kategori Ekle</h2>
+    <form id="categoryForm" class="form two">
+      <input type="hidden" id="categoryId">
+      <label>Ad <input id="categoryName" required placeholder="Market, yakıt..."></label>
+      <label>Tür
+        <select id="categoryType">
+          <option value="expense">Gider</option>
+          <option value="income">Gelir</option>
+        </select>
+      </label>
+      <label class="full">Aylık Limit / Hedef <input type="number" id="categoryLimit" step="0.01" placeholder="Boş kalabilir"></label>
+      <button class="primary full" type="submit">Kategori Kaydet</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Kasalar</h2>
+    <div id="accountList" class="list"></div>
+  </div>
+
+  <div class="card">
+    <h2>Kategoriler</h2>
+    <div id="categoryList" class="list"></div>
+  </div>
+
+  <div class="card">
+    <h2>Yedekleme</h2>
+    <p>Telefon değiştirirken veya verileri silmeden önce yedek al.</p>
+    <div class="form">
+      <button class="ghost" id="exportBtn" type="button">Verileri Dışa Aktar</button>
+      <label class="btn ghost">Verileri İçe Aktar <input type="file" id="importFile" accept="application/json" style="display:none"></label>
+      <button class="danger" id="resetBtn" type="button">Tüm Verileri Sıfırla</button>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+(function(){
+var KEY = "maas_kasa_telefon_temiz_v1";
+var currentView = "takip";
+
+function el(id){ return document.getElementById(id); }
+function all(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+function money(n){ n = Number(n || 0); try{return n.toLocaleString("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:2});}catch(e){return "₺"+n.toFixed(2);} }
+function uid(){ return "id_" + Math.random().toString(36).substr(2,9) + "_" + Date.now(); }
+function today(){ var d=new Date(); var off=d.getTimezoneOffset()*60000; return new Date(d.getTime()-off).toISOString().substr(0,10); }
+function thisMonth(){ return today().substr(0,7); }
+function esc(s){ s = s == null ? "" : String(s); return s.replace(/[&<>"']/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m];}); }
+
+var defaults = {
+ accounts:[
+  {id:uid(),name:"Nakit",type:"cash",opening:0,statementDay:1,dueDay:10},
+  {id:uid(),name:"Banka Hesabı",type:"bank",opening:0,statementDay:1,dueDay:10},
+  {id:uid(),name:"Kredi Kartı",type:"credit",opening:0,statementDay:1,dueDay:10}
+ ],
+ categories:[
+  {id:uid(),name:"Maaş",type:"income",limit:0},
+  {id:uid(),name:"Ek Gelir",type:"income",limit:0},
+  {id:uid(),name:"Market",type:"expense",limit:0},
+  {id:uid(),name:"Yakıt / Ulaşım",type:"expense",limit:0},
+  {id:uid(),name:"Fatura",type:"expense",limit:0},
+  {id:uid(),name:"Kira",type:"expense",limit:0},
+  {id:uid(),name:"Yemek / Dışarı",type:"expense",limit:0},
+  {id:uid(),name:"Kredi / Borç",type:"expense",limit:0},
+  {id:uid(),name:"Diğer",type:"expense",limit:0}
+ ],
+ tx:[],
+ recurring:[]
+};
+
+var state = load();
+
+function copy(o){ return JSON.parse(JSON.stringify(o)); }
+function load(){
+ try{
+  var raw = localStorage.getItem(KEY);
+  var d = raw ? JSON.parse(raw) : copy(defaults);
+  d.accounts = d.accounts || copy(defaults.accounts);
+  d.categories = d.categories || copy(defaults.categories);
+  d.tx = d.tx || [];
+  d.recurring = d.recurring || [];
+  for(var i=0;i<d.accounts.length;i++){
+   if(d.accounts[i].statementDay == null) d.accounts[i].statementDay = 1;
+   if(d.accounts[i].dueDay == null) d.accounts[i].dueDay = 10;
+   if(d.accounts[i].openingBalance != null && d.accounts[i].opening == null) d.accounts[i].opening = d.accounts[i].openingBalance;
+  }
+  return d;
+ }catch(e){ return copy(defaults); }
+}
+function save(){ try{localStorage.setItem(KEY, JSON.stringify(state));}catch(e){} }
+
+function account(id){ for(var i=0;i<state.accounts.length;i++){if(state.accounts[i].id===id)return state.accounts[i];} return null; }
+function category(id){ for(var i=0;i<state.categories.length;i++){if(state.categories[i].id===id)return state.categories[i];} return null; }
+function accName(id){ var a=account(id); return a?a.name:"Silinmiş kasa"; }
+function catName(id){ var c=category(id); return c?c.name:"Kategorisiz"; }
+function typeText(t){ return t==="income"?"Gelir":t==="expense"?"Gider":"Transfer"; }
+function accType(t){ return t==="cash"?"Nakit":t==="bank"?"Banka":"Kredi Kartı"; }
+function selectedMonth(){ return el("monthPicker").value || thisMonth(); }
+function sameMonth(date,m){ return String(date||"").substr(0,7) === m; }
+function dateObj(iso){ return new Date(iso+"T00:00:00"); }
+function dateStr(y,m,d){ return y+"-"+String(m<10?"0"+m:m)+"-"+String(d<10?"0"+d:d); }
+function daysInMonth(y,m){ return new Date(y,m,0).getDate(); }
+function addMonthsToMonth(month, add){
+ var p=month.split("-"), y=Number(p[0]), m=Number(p[1]);
+ var d=new Date(y,m-1+add,1);
+ return d.getFullYear()+"-"+String(d.getMonth()+1<10?"0"+(d.getMonth()+1):(d.getMonth()+1));
+}
+function clampDay(y,m,day){ return Math.min(Math.max(1,Number(day||1)), daysInMonth(y,m)); }
+
+function txs(m){
+ m = m || selectedMonth();
+ var rows = [];
+ for(var i=0;i<state.tx.length;i++){ if(sameMonth(state.tx[i].date,m)) rows.push(state.tx[i]); }
+ rows.sort(function(a,b){ return String(b.date).localeCompare(String(a.date)); });
+ return rows;
+}
+function summary(m){
+ var rows=txs(m), income=0, expense=0;
+ for(var i=0;i<rows.length;i++){
+  if(rows[i].type==="income") income += Number(rows[i].amount||0);
+  if(rows[i].type==="expense") expense += Number(rows[i].amount||0);
+ }
+ return {rows:rows,income:income,expense:expense,net:income-expense};
+}
+function daysLeft(){
+ var m=selectedMonth().split("-"), y=Number(m[0]), mo=Number(m[1]);
+ var last = new Date(y,mo,0).getDate();
+ if(selectedMonth() !== thisMonth()) return last;
+ return Math.max(1,last-new Date().getDate()+1);
+}
+function accountBalance(id){
+ var a=account(id), total=Number(a?a.opening:0);
+ for(var i=0;i<state.tx.length;i++){
+  var t=state.tx[i], amount=Number(t.amount||0);
+  if(t.type==="income" && t.accountId===id) total+=amount;
+  if(t.type==="expense" && t.accountId===id) total-=amount;
+  if(t.type==="transfer"){
+   if(t.fromId===id) total-=amount;
+   if(t.toId===id) total+=amount;
+  }
+ }
+ return total;
+}
+function txAccText(t){
+ if(t.type==="transfer") return accName(t.fromId)+" → "+accName(t.toId);
+ return accName(t.accountId);
+}
+function isCredit(id){ var a=account(id); return a && a.type==="credit"; }
+
+function statementDates(card, month){
+ var p=month.split("-"), y=Number(p[0]), m=Number(p[1]);
+ var sd=clampDay(y,m,card.statementDay||1);
+ var statement=dateStr(y,m,sd);
+ var dueDay=Number(card.dueDay||10);
+ var dueMonth=month;
+ if(dueDay < sd) dueMonth=addMonthsToMonth(month,1);
+ var dp=dueMonth.split("-"), dy=Number(dp[0]), dm=Number(dp[1]);
+ var due=dateStr(dy,dm,clampDay(dy,dm,dueDay));
+ var prevMonth=addMonthsToMonth(month,-1);
+ var pp=prevMonth.split("-"), py=Number(pp[0]), pm=Number(pp[1]);
+ var prev=dateStr(py,pm,clampDay(py,pm,card.statementDay||1));
+ return {prev:prev, statement:statement, due:due};
+}
+function statementInfo(card, month){
+ month = month || thisMonth();
+ var dates=statementDates(card,month);
+ var amount=0, paid=0;
+ for(var i=0;i<state.tx.length;i++){
+  var t=state.tx[i], d=t.date;
+  if(t.type==="expense" && t.accountId===card.id && d>dates.prev && d<=dates.statement) amount += Number(t.amount||0);
+  if(t.type==="transfer" && t.toId===card.id && d>dates.statement && d<=dates.due) paid += Number(t.amount||0);
+ }
+ var remaining=Math.max(0, amount-paid);
+ return {dates:dates, amount:amount, paid:paid, remaining:remaining};
+}
+function diffDays(a,b){
+ var ms = dateObj(b).getTime() - dateObj(a).getTime();
+ return Math.ceil(ms/86400000);
+}
+
+function processDueRecurringAuto(){
+ var m=thisMonth();
+ var parts=m.split("-"), y=Number(parts[0]), mo=Number(parts[1]);
+ var last=new Date(y,mo,0).getDate();
+ var todayDay=new Date().getDate();
+ var count=0;
+ for(var i=0;i<state.recurring.length;i++){
+  var r=state.recurring[i];
+  var day=Math.min(Number(r.day||1),last);
+  if(day!==todayDay) continue;
+  var date=m+"-"+String(day<10?"0"+day:day);
+  var key="rec:"+r.id+":"+m;
+  var exists=false;
+  for(var j=0;j<state.tx.length;j++){ if(state.tx[j].sourceKey===key){ exists=true; break; } }
+  if(!exists){
+   state.tx.push({id:uid(),type:r.type,date:date,amount:Number(r.amount||0),description:r.name,categoryId:r.categoryId,accountId:r.accountId,sourceKey:key,autoCreated:true});
+   count++;
+  }
+ }
+ if(count>0){ save(); }
+ return count;
+}
+
+function render(){
+ save();
+ renderSelects();
+ renderTakip();
+ renderMovements();
+ renderSettings();
+ renderRecurring();
+}
+function renderSelects(){
+ var accOptions="", bankOptions="", i;
+ for(i=0;i<state.accounts.length;i++){
+  accOptions += '<option value="'+state.accounts[i].id+'">'+esc(state.accounts[i].name)+' ('+accType(state.accounts[i].type)+')</option>';
+  if(state.accounts[i].type!=="credit") bankOptions += '<option value="'+state.accounts[i].id+'">'+esc(state.accounts[i].name)+' ('+accType(state.accounts[i].type)+')</option>';
+ }
+ el("txAccount").innerHTML=accOptions; el("txFrom").innerHTML=accOptions; el("txTo").innerHTML=accOptions; el("recAccount").innerHTML=accOptions;
+ el("filterAccount").innerHTML='<option value="all">Tüm kasalar</option>'+accOptions;
+
+ function cats(type){ var s=""; for(var j=0;j<state.categories.length;j++){ if(state.categories[j].type===type) s += '<option value="'+state.categories[j].id+'">'+esc(state.categories[j].name)+'</option>'; } return s; }
+ var txType = el("txType").value==="income" ? "income":"expense";
+ el("txCategory").innerHTML=cats(txType);
+ el("recCategory").innerHTML=cats(el("recType").value);
+}
+function categoryTotals(){
+ var map={}, rows=txs();
+ for(var i=0;i<rows.length;i++){
+  var t=rows[i]; if(t.type!=="expense") continue;
+  map[t.categoryId]=(map[t.categoryId]||0)+Number(t.amount||0);
+ }
+ var arr=[];
+ for(var k in map){ if(map.hasOwnProperty(k)) arr.push({id:k,name:catName(k),amount:map[k],cat:category(k)}); }
+ arr.sort(function(a,b){return b.amount-a.amount;});
+ return arr;
+}
+function renderTakip(){
+ var s=summary(), left=daysLeft();
+ el("mIncome").innerHTML=money(s.income); el("mExpense").innerHTML=money(s.expense); el("mNet").innerHTML=money(s.net);
+ var totalBalance=0; for(var tb=0;tb<state.accounts.length;tb++){ totalBalance += accountBalance(state.accounts[tb].id); }
+ if(el("mTotalBalance")) el("mTotalBalance").innerHTML=money(totalBalance);
+ var incomeCount=0, expenseCount=0;
+ for(var ci=0;ci<s.rows.length;ci++){ if(s.rows[ci].type==="income") incomeCount++; if(s.rows[ci].type==="expense") expenseCount++; }
+ el("incomeCount").innerHTML=incomeCount+" kayıt";
+ el("expenseCount").innerHTML=expenseCount+" kayıt";
+ el("mDaily").innerHTML=money(s.net>0?s.net/left:0); el("dailyText").innerHTML=left+" gün kaldı";
+
+ renderCreditStatements();
+ renderInstallmentPlans();
+
+ var cats=categoryTotals(), html="", max=1;
+ for(var i=0;i<cats.length;i++){ if(cats[i].amount>max) max=cats[i].amount; }
+ if(!cats.length){ html='<div class="empty">Henüz gider kaydı yok.</div>'; }
+ for(i=0;i<cats.length;i++){
+  var c=cats[i], pct=Math.round(c.amount/max*100), lim=Number(c.cat?c.cat.limit:0), cls="", sub="%"+pct;
+  if(lim>0){ var ratio=c.amount/lim; sub=Math.round(ratio*100)+"% limit"; if(ratio>=1)cls="badfill"; else if(ratio>=.8)cls="warnfill"; }
+  html+='<div class="bar-row"><div class="bar-top"><span>'+esc(c.name)+' <small>'+sub+'</small></span><span>'+money(c.amount)+'</span></div><div class="track"><div class="fill '+cls+'" style="width:'+pct+'%"></div></div></div>';
+ }
+ el("categoryBars").innerHTML=html;
+
+ html="";
+ for(i=0;i<state.accounts.length;i++){
+  var a=state.accounts[i], bal=accountBalance(a.id);
+  var extra = a.type==="credit" ? ' • Ekstre: '+(a.statementDay||1)+'. gün • Son ödeme: '+(a.dueDay||10)+'. gün' : '';
+  html += '<div class="item"><div><b>'+esc(a.name)+'</b><span>'+accType(a.type)+' • Başlangıç: '+money(a.opening)+extra+'</span></div><div class="amount '+(bal<0?'expense':'income')+'">'+money(bal)+'</div></div>';
+ }
+ el("accountCards").innerHTML=html || '<div class="empty">Kasa yok.</div>';
+
+ var r=selectedMonth().split("-"), y=Number(r[0]), mo=Number(r[1]), last=new Date(y,mo,0).getDate(), current=(selectedMonth()===thisMonth()?new Date().getDate():last);
+ var avg=current>0?s.expense/current:0, estExpense=avg*last, estNet=s.income-estExpense;
+ var cls=estNet<0?"note bad":"note good";
+ el("forecast").innerHTML='<div class="'+cls+'">Bu harcama temposu devam ederse ay sonunda yaklaşık <b>'+money(estNet)+'</b> kalır/açık verir. Günlük ortalama gider: <b>'+money(avg)+'</b></div>';
+
+ var recent=state.tx.slice().sort(function(a,b){return String(b.date).localeCompare(String(a.date));}).slice(0,6);
+ html=""; for(i=0;i<recent.length;i++) html += moveHtml(recent[i],false);
+ el("recentList").innerHTML=html || '<div class="empty">Henüz işlem yok.</div>';
+}
+function renderCreditStatements(){
+ var html="", cards=0, current=today();
+ for(var i=0;i<state.accounts.length;i++){
+  var card=state.accounts[i]; if(card.type!=="credit") continue; cards++;
+  var info=statementInfo(card, thisMonth());
+  var bal=accountBalance(card.id);
+  var status="", noteCls="note info", pay="";
+  var daysToStatement=diffDays(current, info.dates.statement);
+  var daysToDue=diffDays(current, info.dates.due);
+  if(info.amount<=0){
+   status = "Bu dönem oluşmuş ekstre tutarı yok.";
+   noteCls = "note info";
+  }else if(current < info.dates.statement){
+   status = daysToStatement<=5 ? "Ekstreye "+daysToStatement+" gün kaldı. Tahmini ekstre: "+money(info.amount) : "Ekstre tarihi bekleniyor. Tahmini ekstre: "+money(info.amount);
+   noteCls = "note";
+  }else if(current >= info.dates.statement && current <= info.dates.due){
+   status = "Ekstre kesildi. Son ödemeye "+daysToDue+" gün var.";
+   noteCls = "note";
+   if(info.remaining>0) pay = payHtml(card, info.remaining);
+  }else{
+   if(info.remaining>0){ status = "Son ödeme tarihi geçti. Kalan ödeme: "+money(info.remaining); noteCls="note bad"; pay=payHtml(card, info.remaining); }
+   else { status = "Bu dönem ekstresi ödenmiş görünüyor."; noteCls="note good"; }
+  }
+  html += '<div class="item"><div><b>'+esc(card.name)+'</b><span>Ekstre: '+info.dates.statement+' • Son ödeme: '+info.dates.due+' • Kart bakiyesi: '+money(bal)+'</span><div class="'+noteCls+'" style="margin-top:8px">'+status+'<br>Ekstre: <b>'+money(info.amount)+'</b> • Ödenen: <b>'+money(info.paid)+'</b> • Kalan: <b>'+money(info.remaining)+'</b></div>'+pay+'</div></div>';
+ }
+ el("creditStatementList").innerHTML = cards ? html : '<div class="empty">Kredi kartı tanımlı değil. Ayarlar kısmından kredi kartı ekleyebilirsin.</div>';
+}
+function payHtml(card, amount){
+ var opts="";
+ for(var i=0;i<state.accounts.length;i++){
+  var a=state.accounts[i]; if(a.type!=="credit") opts += '<option value="'+a.id+'">'+esc(a.name)+' ('+accType(a.type)+')</option>';
+ }
+ if(!opts) return '<div class="note bad" style="margin-top:8px">Ödeme için nakit veya banka hesabı eklemelisin.</div>';
+ return '<div class="pay-row"><select id="paySource_'+card.id+'">'+opts+'</select><button class="primary" type="button" data-pay-card="'+card.id+'" data-pay-amount="'+amount+'">Öde</button></div>';
+}
+function renderInstallmentPlans(){
+ var groups={}, i;
+ for(i=0;i<state.tx.length;i++){
+  var t=state.tx[i];
+  if(!t.installmentGroup) continue;
+  if(!groups[t.installmentGroup]) groups[t.installmentGroup]=[];
+  groups[t.installmentGroup].push(t);
+ }
+ var html="", keys=[];
+ for(var k in groups){ if(groups.hasOwnProperty(k)) keys.push(k); }
+ if(!keys.length){ el("installmentPlans").innerHTML='<div class="empty">Aktif taksitli alışveriş yok.</div>'; return; }
+ var current=today();
+ for(i=0;i<keys.length;i++){
+  var list=groups[keys[i]].sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
+  var first=list[0], total=0, paidDue=0, remainingCount=0, nextDate="";
+  for(var j=0;j<list.length;j++){
+   total += Number(list[j].amount||0);
+   if(list[j].date <= current) paidDue++;
+   else { remainingCount++; if(!nextDate) nextDate=list[j].date; }
+  }
+  html += '<div class="item"><div><b>'+esc(first.description||"Taksitli Alışveriş")+'</b><span>'+accName(first.accountId)+' • Toplam '+list.length+' taksit • İşlenen/Vadesi gelen: '+paidDue+' • Kalan: '+remainingCount+(nextDate?' • Sıradaki: '+nextDate:'')+'</span><span class="installment-chip">Toplam '+money(total)+' / Taksit '+money(first.amount)+'</span></div><div class="amount expense">-'+money(total)+'</div></div>';
+ }
+ el("installmentPlans").innerHTML=html;
+}
+function moveHtml(t,actions){
+ var sign=t.type==="expense"?"-":t.type==="income"?"+":"";
+ var title=t.description || (t.type==="transfer"?"Transfer":catName(t.categoryId));
+ var inst = t.installmentGroup ? '<span class="installment-chip">'+t.installmentNo+'/'+t.installmentTotal+' taksit</span>' : '';
+ var html='<div class="item"><div><b>'+esc(title)+'</b><span>'+esc(t.date)+' • <span class="badge '+t.type+'">'+typeText(t.type)+'</span> • '+(t.type==="transfer"?"Transfer":esc(catName(t.categoryId)))+' • '+esc(txAccText(t))+'</span>'+inst;
+ if(actions){ html+='<div class="actions"><button class="mini" type="button" data-edit-tx="'+t.id+'">Düzenle</button><button class="mini del" type="button" data-del-tx="'+t.id+'">Sil</button></div>'; }
+ html+='</div><div class="amount '+(t.type==="expense"?"expense":t.type==="income"?"income":"transfer")+'">'+sign+money(t.amount)+'</div></div>';
+ return html;
+}
+function renderMovements(){
+ var type=el("filterType").value, acc=el("filterAccount").value, q=(el("filterSearch").value||"").toLocaleLowerCase("tr-TR");
+ var rows=txs(), out=[], income=0, expense=0, i;
+ for(i=0;i<rows.length;i++){
+  var t=rows[i]; 
+  if(type!=="all" && t.type!==type) continue;
+  if(acc!=="all" && t.accountId!==acc && t.fromId!==acc && t.toId!==acc) continue;
+  var search=(t.date+" "+(t.description||"")+" "+catName(t.categoryId)+" "+txAccText(t)+" "+typeText(t.type)).toLocaleLowerCase("tr-TR");
+  if(q && search.indexOf(q)===-1) continue;
+  out.push(t);
+  if(t.type==="income") income+=Number(t.amount||0);
+  if(t.type==="expense") expense+=Number(t.amount||0);
+ }
+ el("fIncome").innerHTML=money(income); el("fExpense").innerHTML=money(expense); el("fNet").innerHTML=money(income-expense);
+ var html=""; for(i=0;i<out.length;i++) html+=moveHtml(out[i],true);
+ el("movementList").innerHTML=html || '<div class="empty">Bu filtrede hareket yok.</div>';
+}
+function renderSettings(){
+ var html="", i;
+ for(i=0;i<state.accounts.length;i++){
+  var a=state.accounts[i], bal=accountBalance(a.id);
+  var extra = a.type==="credit" ? ' • Ekstre: '+(a.statementDay||1)+'. gün • Son ödeme: '+(a.dueDay||10)+'. gün' : '';
+  html+='<div class="item"><div><b>'+esc(a.name)+'</b><span>'+accType(a.type)+' • Başlangıç: '+money(a.opening)+extra+'</span><div class="actions"><button class="mini" data-edit-acc="'+a.id+'" type="button">Düzenle</button><button class="mini del" data-del-acc="'+a.id+'" type="button">Sil</button></div></div><div class="amount '+(bal<0?'expense':'income')+'">'+money(bal)+'</div></div>';
+ }
+ el("accountList").innerHTML=html || '<div class="empty">Kasa yok.</div>';
+ html="";
+ for(i=0;i<state.categories.length;i++){
+  var c=state.categories[i];
+  html+='<div class="item"><div><b>'+esc(c.name)+'</b><span><span class="badge '+c.type+'">'+typeText(c.type)+'</span>'+(Number(c.limit)>0?' • Limit: '+money(c.limit):'')+'</span><div class="actions"><button class="mini" data-edit-cat="'+c.id+'" type="button">Düzenle</button><button class="mini del" data-del-cat="'+c.id+'" type="button">Sil</button></div></div></div>';
+ }
+ el("categoryList").innerHTML=html;
+}
+function renderRecurring(){
+ var html="", i;
+ for(i=0;i<state.recurring.length;i++){
+  var r=state.recurring[i];
+  html+='<div class="item"><div><b>'+esc(r.name)+'</b><span>Her ay '+r.day+'. gün • <span class="badge '+r.type+'">'+typeText(r.type)+'</span> • '+catName(r.categoryId)+' • '+accName(r.accountId)+'</span><div class="actions"><button class="mini" data-edit-rec="'+r.id+'" type="button">Düzenle</button><button class="mini del" data-del-rec="'+r.id+'" type="button">Sil</button></div></div><div class="amount '+(r.type==="expense"?"expense":"income")+'">'+(r.type==="expense"?"-":"+")+money(r.amount)+'</div></div>';
+ }
+ el("recList").innerHTML=html || '<div class="empty">Düzenli kayıt yok.</div>';
+}
+function updateTxFields(){
+ var transfer=el("txType").value==="transfer";
+ el("catWrap").className=transfer?"hidden":"";
+ el("accWrap").className=transfer?"hidden":"";
+ el("fromWrap").className=transfer?"":"hidden";
+ el("toWrap").className=transfer?"":"hidden";
+ var showInstallment = !transfer && el("txType").value==="expense" && isCredit(el("txAccount").value);
+ el("installmentWrap").className=showInstallment?"":"hidden";
+ if(!showInstallment) el("txInstallments").value=1;
+ renderSelects();
+}
+function clearTx(){
+ el("txId").value=""; el("txForm").reset(); el("txDate").value=today(); el("txType").value="expense"; el("txInstallments").value=1; updateTxFields();
+}
+function updateAccountCreditFields(){
+ var isCard = el("accountType").value === "credit";
+ if(el("statementWrap")) el("statementWrap").className = isCard ? "" : "hidden";
+ if(el("dueWrap")) el("dueWrap").className = isCard ? "" : "hidden";
+}
+function clearAccountForm(){
+ el("accountForm").reset(); el("accountId").value=""; el("accountOpening").value=0; el("statementDay").value=1; el("dueDay").value=10; updateAccountCreditFields(); updateAccountCreditFields();
+}
+function setView(id){
+ currentView=id;
+ all(".view").forEach(function(v){ if(v.id===id){v.classList.add("active");}else{v.classList.remove("active");} });
+ all(".nav-link").forEach(function(a){ if(a.getAttribute("data-view")===id){a.classList.add("active");}else{a.classList.remove("active");} });
+}
+function createInstallments(baseTx, count){
+ var acc=account(baseTx.accountId), p=baseTx.date.substr(0,7).split("-"), y=Number(p[0]), m=Number(p[1]);
+ var statementDay=acc.statementDay||1;
+ var purchaseDay=Number(baseTx.date.substr(8,2));
+ var firstOffset = purchaseDay <= statementDay ? 0 : 1;
+ var each = Math.round((Number(baseTx.amount)/count)*100)/100;
+ var totalAssigned=0, group=uid();
+ for(var i=1;i<=count;i++){
+  var targetMonth=addMonthsToMonth(baseTx.date.substr(0,7), firstOffset+i-1);
+  var tp=targetMonth.split("-"), ty=Number(tp[0]), tm=Number(tp[1]);
+  var day=clampDay(ty,tm,statementDay);
+  var amount = i===count ? Math.round((Number(baseTx.amount)-totalAssigned)*100)/100 : each;
+  totalAssigned += amount;
+  state.tx.push({
+   id:uid(),
+   type:"expense",
+   date:dateStr(ty,tm,day),
+   amount:amount,
+   description:baseTx.description || "Taksitli alışveriş",
+   categoryId:baseTx.categoryId,
+   accountId:baseTx.accountId,
+   installmentGroup:group,
+   installmentNo:i,
+   installmentTotal:count,
+   originalDate:baseTx.date
+  });
+ }
+}
+
+function init(){
+ document.body.className += " js-ready";
+ el("todayText").innerHTML=new Date().toLocaleDateString("tr-TR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+ el("monthPicker").value=thisMonth();
+ clearTx();
+ clearAccountForm();
+
+ all(".nav-link").forEach(function(a){ a.addEventListener("click",function(){ setView(a.getAttribute("data-view")); }); });
+ el("quickAdd").addEventListener("click",function(){ setView("ekle"); });
+ el("monthPicker").addEventListener("change",render);
+ el("txType").addEventListener("change",updateTxFields);
+ el("txAccount").addEventListener("change",updateTxFields);
+ el("recType").addEventListener("change",renderSelects);
+ el("filterType").addEventListener("change",renderMovements); el("filterAccount").addEventListener("change",renderMovements); el("filterSearch").addEventListener("input",renderMovements);
+ el("clearTx").addEventListener("click",clearTx);
+ el("clearAccountForm").addEventListener("click",clearAccountForm);
+ el("accountType").addEventListener("change",updateAccountCreditFields);
+
+ el("txForm").addEventListener("submit",function(e){
+  e.preventDefault();
+  var t={id:el("txId").value||uid(),type:el("txType").value,date:el("txDate").value,amount:Number(el("txAmount").value||0),description:el("txNote").value};
+  if(!t.amount || t.amount<=0){ alert("Tutar 0'dan büyük olmalı."); return; }
+  if(t.type==="transfer"){
+   t.fromId=el("txFrom").value; t.toId=el("txTo").value; if(t.fromId===t.toId){alert("Transferde iki kasa aynı olamaz.");return;}
+  }else{
+   t.categoryId=el("txCategory").value; t.accountId=el("txAccount").value;
+  }
+
+  var installments=Number(el("txInstallments").value||1);
+  if(!el("txId").value && t.type==="expense" && isCredit(t.accountId) && installments>1){
+   createInstallments(t, installments);
+  }else{
+   var found=false; for(var i=0;i<state.tx.length;i++){ if(state.tx[i].id===t.id){ 
+    t.installmentGroup=state.tx[i].installmentGroup; t.installmentNo=state.tx[i].installmentNo; t.installmentTotal=state.tx[i].installmentTotal; t.originalDate=state.tx[i].originalDate;
+    state.tx[i]=t; found=true; break; 
+   } }
+   if(!found) state.tx.push(t);
+  }
+  clearTx(); render(); setView("takip"); location.hash="#takip";
+ });
+
+ el("accountForm").addEventListener("submit",function(e){
+  e.preventDefault();
+  var a={id:el("accountId").value||uid(),name:el("accountName").value,type:el("accountType").value,opening:Number(el("accountOpening").value||0),statementDay:1,dueDay:10};
+  if(a.type==="credit"){
+   a.statementDay=Number(el("statementDay").value||1);
+   a.dueDay=Number(el("dueDay").value||10);
+   a.statementDay=Math.min(31,Math.max(1,a.statementDay));
+   a.dueDay=Math.min(31,Math.max(1,a.dueDay));
+  }
+  var found=false; for(var i=0;i<state.accounts.length;i++){ if(state.accounts[i].id===a.id){ state.accounts[i]=a; found=true; break; } }
+  if(!found) state.accounts.push(a);
+  clearAccountForm(); render();
+ });
+ el("categoryForm").addEventListener("submit",function(e){
+  e.preventDefault();
+  var c={id:el("categoryId").value||uid(),name:el("categoryName").value,type:el("categoryType").value,limit:Number(el("categoryLimit").value||0)};
+  var found=false; for(var i=0;i<state.categories.length;i++){ if(state.categories[i].id===c.id){ state.categories[i]=c; found=true; break; } }
+  if(!found) state.categories.push(c);
+  el("categoryForm").reset(); el("categoryId").value=""; render();
+ });
+ el("recForm").addEventListener("submit",function(e){
+  e.preventDefault();
+  var r={id:el("recId").value||uid(),name:el("recName").value,type:el("recType").value,amount:Number(el("recAmount").value||0),day:Number(el("recDay").value||1),categoryId:el("recCategory").value,accountId:el("recAccount").value};
+  if(!r.amount || r.amount<=0){ alert("Tutar 0'dan büyük olmalı."); return; }
+  var found=false; for(var i=0;i<state.recurring.length;i++){ if(state.recurring[i].id===r.id){ state.recurring[i]=r; found=true; break; } }
+  if(!found) state.recurring.push(r);
+  el("recForm").reset(); el("recId").value=""; el("recDay").value=1; render();
+ });
+ el("generateRecurring").addEventListener("click",function(){
+  var m=selectedMonth(), parts=m.split("-"), y=Number(parts[0]), mo=Number(parts[1]), last=new Date(y,mo,0).getDate(), count=0;
+  for(var i=0;i<state.recurring.length;i++){
+   var r=state.recurring[i], day=Math.min(Number(r.day||1),last), date=m+"-"+String(day<10?"0"+day:day), key="rec:"+r.id+":"+m, exists=false;
+   for(var j=0;j<state.tx.length;j++){ if(state.tx[j].sourceKey===key) exists=true; }
+   if(!exists){ state.tx.push({id:uid(),type:r.type,date:date,amount:r.amount,description:r.name,categoryId:r.categoryId,accountId:r.accountId,sourceKey:key}); count++; }
+  }
+  render(); alert(count?count+" düzenli kayıt işlendi.":"Bu ay işlenecek yeni kayıt yok.");
+ });
+
+ document.body.addEventListener("click",function(e){
+  var target=e.target, id;
+  id=target.getAttribute("data-pay-card"); if(id){ payCard(id, Number(target.getAttribute("data-pay-amount")||0)); return; }
+  id=target.getAttribute("data-edit-tx"); if(id){ editTx(id); return; }
+  id=target.getAttribute("data-del-tx"); if(id){ delTx(id); return; }
+  id=target.getAttribute("data-edit-acc"); if(id){ editAcc(id); return; }
+  id=target.getAttribute("data-del-acc"); if(id){ delAcc(id); return; }
+  id=target.getAttribute("data-edit-cat"); if(id){ editCat(id); return; }
+  id=target.getAttribute("data-del-cat"); if(id){ delCat(id); return; }
+  id=target.getAttribute("data-edit-rec"); if(id){ editRec(id); return; }
+  id=target.getAttribute("data-del-rec"); if(id){ delRec(id); return; }
+ });
+
+ el("exportBtn").addEventListener("click",function(){
+  var blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="maas-kasa-yedek-"+today()+".json"; a.click(); URL.revokeObjectURL(a.href);
+ });
+ el("importFile").addEventListener("change",function(e){
+  var file=e.target.files[0]; if(!file)return; var reader=new FileReader();
+  reader.onload=function(){ try{ var d=JSON.parse(reader.result); if(!d.accounts||!d.categories)throw new Error(); state={accounts:d.accounts,categories:d.categories,tx:d.tx||[],recurring:d.recurring||[]}; render(); alert("Yedek yüklendi."); }catch(err){alert("Yedek dosyası okunamadı.");} };
+  reader.readAsText(file);
+ });
+ el("resetBtn").addEventListener("click",function(){ if(confirm("Tüm veriler silinsin mi?")){ state=copy(defaults); localStorage.removeItem(KEY); render(); } });
+
+ var autoCount=processDueRecurringAuto();
+ render();
+ if(autoCount>0){ setTimeout(function(){ alert(autoCount+" düzenli gelir/gider tarihi geldiği için otomatik işlendi."); }, 300); }
+ var hash=(location.hash||"#takip").replace("#",""); if(el(hash)){setView(hash);}
+}
+function payCard(cardId, amount){
+ var source = el("paySource_"+cardId) ? el("paySource_"+cardId).value : "";
+ if(!source){ alert("Ödeme çıkış kasası seçilemedi."); return; }
+ if(!amount || amount<=0){ alert("Ödenecek tutar yok."); return; }
+ var custom = prompt("Ödenecek tutar:", amount.toFixed(2));
+ if(custom===null) return;
+ var payAmount=Number(String(custom).replace(",","."));
+ if(!payAmount || payAmount<=0){ alert("Geçerli tutar gir."); return; }
+ state.tx.push({id:uid(),type:"transfer",date:today(),amount:payAmount,description:"Kredi kartı ekstresi ödemesi: "+accName(cardId),fromId:source,toId:cardId,cardPayment:true});
+ render();
+ alert("Kart ödemesi kaydedildi.");
+}
+function editTx(id){ for(var i=0;i<state.tx.length;i++){var t=state.tx[i]; if(t.id===id){ setView("ekle"); location.hash="#ekle"; el("txId").value=t.id; el("txType").value=t.type; updateTxFields(); el("txDate").value=t.date; el("txAmount").value=t.amount; el("txNote").value=t.description||""; if(t.type==="transfer"){el("txFrom").value=t.fromId;el("txTo").value=t.toId;}else{el("txCategory").value=t.categoryId;el("txAccount").value=t.accountId; updateTxFields();} return; }}}
+function delTx(id){ if(!confirm("İşlem silinsin mi?"))return; state.tx=state.tx.filter(function(t){return t.id!==id;}); render(); }
+function editAcc(id){ var a=account(id); if(!a)return; setView("ayarlar"); location.hash="#ayarlar"; el("accountId").value=a.id; el("accountName").value=a.name; el("accountType").value=a.type; updateAccountCreditFields(); el("accountOpening").value=a.opening; el("statementDay").value=a.statementDay||1; el("dueDay").value=a.dueDay||10; }
+function delAcc(id){ if(!confirm("Kasa/kart silinsin mi?"))return; state.accounts=state.accounts.filter(function(a){return a.id!==id;}); render(); }
+function editCat(id){ var c=category(id); if(!c)return; setView("ayarlar"); location.hash="#ayarlar"; el("categoryId").value=c.id; el("categoryName").value=c.name; el("categoryType").value=c.type; el("categoryLimit").value=c.limit; }
+function delCat(id){ if(!confirm("Kategori silinsin mi?"))return; state.categories=state.categories.filter(function(c){return c.id!==id;}); render(); }
+function editRec(id){ for(var i=0;i<state.recurring.length;i++){var r=state.recurring[i]; if(r.id===id){setView("duzenli"); location.hash="#duzenli"; el("recId").value=r.id; el("recName").value=r.name; el("recType").value=r.type; renderSelects(); el("recAmount").value=r.amount; el("recDay").value=r.day; el("recCategory").value=r.categoryId; el("recAccount").value=r.accountId; return;}}}
+function delRec(id){ if(!confirm("Düzenli kayıt silinsin mi?"))return; state.recurring=state.recurring.filter(function(r){return r.id!==id;}); render(); }
+
+if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded",init); } else { init(); }
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./service-worker.js').catch(function(){});
+  });
+}
+</script>
+
+</body>
+</html>
